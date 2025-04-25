@@ -1,0 +1,125 @@
+#cloud-config
+fqdn: FQDN
+users:
+  - default
+  - name: doa
+    gecos: DevOps Akademia
+    homedir: /home/doa
+    groups:
+      - sudo
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    plain_text_passwd: doa
+    ssh_authorized_keys:
+      - ssh-rsa SSH-PUBKEY
+timezone: "Europe/Budapest"
+locale: C.UTF-8
+repo_update: true
+package_update: true
+package_upgrade: true
+packages:
+  - locales
+  - vim-nox
+  - vim-syntastic
+  - vim-syntax-docker
+  - colordiff
+  - tree
+  - curl
+  - tmux
+  - python3-pygments
+  - jq
+  - w3m
+  - net-tools
+  - dnsutils
+write_files:
+  - content: |
+      set background=dark
+      set number
+      if has("autocmd")
+        au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+      endif
+      if has("autocmd")
+        filetype plugin indent on
+      endif
+    path: /etc/vim/vimrc.local
+    owner: root:root
+    permissions: '0644'
+  - content: |
+      export PATH=~/.local/bin:$PATH
+      HISTCONTROL=ignoreboth
+      shopt -s histappend
+      HISTSIZE=1000
+      HISTFILESIZE=20000
+      export PROMPT_COMMAND='history -a'
+      PS1='\[\033[01;32m\]\u\[\033[00m\]@\[\033[01;31m\]\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\\$ '
+      [[ $commands[kubectl] ]] && source <(kubectl completion bash)
+    path: /etc/skel/.bashrc
+    owner: root:root
+    permissions: '0644'
+  - content: |
+      #!/bin/bash
+      set -x
+      function k8s-prepare() {
+      export VERSION=${VERSION:-1.32}
+      curl -fsSL https://pkgs.k8s.io/core:/stable:/v${VERSION}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+      echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v${VERSION}/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+      sudo apt-get update
+      sudo apt-get install -y kubelet kubeadm kubectl
+      sudo apt-mark hold kubelet kubeadm kubectl
+      sudo systemctl enable --now kubelet
+      sudo tee /etc/modules-load.d/k8s.conf <<EOF
+      br_netfilter
+      overlay
+      EOF
+      sudo modprobe br_netfilter
+      sudo modprobe overlay
+      sudo tee /etc/sysctl.d/99-k8s.conf <<EOF
+      net.ipv4.ip_forward=1
+      net.bridge.bridge-nf-call-iptables=1
+      net.bridge.bridge-nf-call-ip6tables=1
+      EOF
+      sudo systemctl restart procps
+      sudo apt install -y containerd
+      sudo mkdir -p /etc/containerd/
+      containerd config default | sudo tee /etc/containerd/config.toml > /dev/null
+      sudo sed -ie 's|SystemdCgroup = false|SystemdCgroup = true|' /etc/containerd/config.toml
+      sudo sed -ie 's|sandbox_image = "registry.k8s.io/pause:.*"|sandbox_image = "registry.k8s.io/pause:3.10"|' /etc/containerd/config.toml
+      sudo systemctl restart containerd
+      if [ -z ${IP+x} ]; then
+        export IP=$(ip -j addr ls | jq -r ".[${IFN:-1}].addr_info[0] | select(.family == \"inet\") | .local")
+      fi
+      echo $IP
+      }
+      case $1 in
+        master)
+          k8s-prepare
+          if [ -z ${POD_NETWORK+x} ]; then
+            sudo kubeadm init --apiserver-advertise-address ${IP} --ignore-preflight-errors=NumCPU
+          else
+            sudo kubeadm init --apiserver-advertise-address ${IP} --pod-network-cidr ${POD_NETWORK} --ignore-preflight-errors=NumCPU
+          fi
+          mkdir -p $HOME/.kube
+          sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+          sudo chown $(id -u):$(id -g) $HOME/.kube/config
+          kubectl get nodes
+          ;;
+        net)
+          CILIUM_CLI_VERSION=$(curl -s https://raw.githubusercontent.com/cilium/cilium-cli/main/stable.txt)
+          CLI_ARCH=amd64
+          curl -L --fail --remote-name-all https://github.com/cilium/cilium-cli/releases/download/${CILIUM_CLI_VERSION}/cilium-linux-${CLI_ARCH}.tar.gz{,.sha256sum}
+          sha256sum --check cilium-linux-${CLI_ARCH}.tar.gz.sha256sum
+          sudo tar xzvfC cilium-linux-${CLI_ARCH}.tar.gz /usr/local/bin
+          rm cilium-linux-${CLI_ARCH}.tar.gz{,.sha256sum}
+          cilium install
+          cilium status --wait
+          ;;
+        *)
+          k8s-prepare
+          ;;
+      esac
+    path: /etc/skel/k8s-prepare.sh
+    owner: root:root
+    permissions: '0755'
+runcmd:
+  - [ sed, -ie, '/10\.19\..*\..*\/16/d', /etc/netplan/50-cloud-init.yaml ]
+  - [ netplan, apply ]
