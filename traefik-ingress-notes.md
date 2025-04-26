@@ -44,6 +44,13 @@ providers:
       - ingress-traefik
       - default
 
+# Configure logger plugin
+experimental:
+  plugins:
+    traefiklogger:
+      moduleName: github.com/fzoli/traefiklogger
+      version: v0.10.0
+
 # Allow bind to port 80 and 443
 securityContext:
   capabilities:
@@ -56,7 +63,7 @@ securityContext:
 ```
 
 ```sh
-helm install traefik traefik/traefik --namespace ingress-traefik -f traefik-values.yaml
+helm install traefik traefik/traefik --namespace ingress-traefik --create-namespace -f traefik-values.yaml
 ```
 
 # Deploy test app (HTTP)
@@ -176,6 +183,23 @@ spec:
     - CurveP384
 ```
 
+# Deploy logger middleware
+
+```yaml
+#loggermw.yaml
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  namespace: default
+  name: jsonlogger
+spec:
+  plugin:
+    traefiklogger:
+      Enabled: true
+      Name: json-logger
+      LogFormat: json
+```
+
 # Deploy test app (HTTPS)
 
 ```yaml
@@ -188,6 +212,7 @@ metadata:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls.options: default-mlkemtls@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: default-jsonlogger@kubernetescrd
 spec:
   ingressClassName: traefik
   tls:
