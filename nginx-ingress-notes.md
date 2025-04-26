@@ -8,9 +8,36 @@ kubectl label nodes cka02-master-01 ingress-ready=yep
 sudo snap install helm --classic
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
+```
+
+# Install ingress
+
+```sh
 helm install ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace \
   --set controller.kind=DaemonSet --set controller.hostNetwork=true --set controller.dnsPolicy=ClusterFirstWithHostNet --set controller.service.type="" --set controller.hostPort.enabled=true --set controller.hostPort.http=80 --set controller.hostPort.https=443 \
   --set controller.nodeSelector."ingress-ready"="yep"
+```
+
+or
+
+```yaml
+#ingress-values.yaml
+controller:
+  kind: DaemonSet
+  hostNetwork: true
+  dnsPolicy: ClusterFirstWithHostNet
+  service:
+    type: ""
+  hostPort:
+    enabled: true
+    http: 80
+    https: 443
+  nodeSelector:
+    ingress-ready: "yep"
+```
+
+```sh
+helm install ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace -f ingress-values.yaml
 ```
 
 # Deploy test app (HTTP)
