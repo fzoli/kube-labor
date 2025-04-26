@@ -63,10 +63,13 @@ securityContext:
 ```
 
 ```sh
-helm install traefik traefik/traefik --namespace ingress-traefik --create-namespace -f traefik-values.yaml
+helm install traefik traefik/traefik \ 
+  --namespace ingress-traefik --create-namespace \
+  --version 35.1.0 \
+  -f traefik-values.yaml
 ```
 
-# Deploy test app (HTTP)
+# Deploy test app (base without HTTPS)
 
 ```yaml
 #base-app-deploy.yaml
@@ -200,7 +203,7 @@ spec:
       LogFormat: json
 ```
 
-# Deploy test app (HTTPS)
+# Deploy HTTPS ingress
 
 ```yaml
 # tls-ingress.yaml
