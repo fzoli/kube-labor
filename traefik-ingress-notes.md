@@ -43,6 +43,8 @@ providers:
     namespaces:
       - ingress-traefik
       - default
+  kubernetesIngress:
+    allowExternalNameServices: true
 
 # Configure logger plugin
 experimental:
@@ -70,6 +72,11 @@ helm install traefik traefik/traefik \
 ```
 
 # Deploy test app (base without HTTPS)
+
+The `example.com` domain should be replaced in both email addresses and hostnames.
+
+For testing without a DNS server, you can use `nip.io`\
+If your IP address is `1.2.3.4`, simply replace `test.example.com` with `test.1-2-3-4.nip.io`
 
 ```yaml
 #base-app-deploy.yaml
@@ -235,4 +242,57 @@ spec:
                   number: 80
 ```
 
-The `example.com` domain must be replaced both in the email addresses and in the hostnames.
+# Proxy
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: ipify-proxy-service
+  namespace: default
+spec:
+  type: ExternalName
+  externalName: api.ipify.org. # FQDN
+  ports:
+    - port: 443
+      targetPort: 443
+      protocol: TCP
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: ipify-proxy-headers
+  namespace: default
+spec:
+  headers:
+    customRequestHeaders:
+      Host: "api.ipify.org"
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ipify-proxy-ingress
+  namespace: default
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls.options: default-mlkemtls@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: default-ipify-proxy-headers@kubernetescrd,default-jsonlogger@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - ipify.example.com
+      secretName: ipify-tls
+  rules:
+    - host: ipify.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ipify-proxy-service
+                port:
+                  number: 443
+```

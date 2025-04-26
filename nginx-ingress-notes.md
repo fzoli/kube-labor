@@ -42,6 +42,11 @@ helm install ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-nginx
 
 # Deploy test app (HTTP)
 
+The `example.com` domain should be replaced in both email addresses and hostnames.
+
+For testing without a DNS server, you can use `nip.io`\
+If your IP address is `1.2.3.4`, simply replace `test.example.com` with `test.1-2-3-4.nip.io`
+
 ```yaml
 #base-app-deploy.yaml
 apiVersion: apps/v1
@@ -168,5 +173,3 @@ spec:
             port:
               number: 80
 ```
-
-The example.com domain must be replaced both in the email addresses and in the hostnames.
