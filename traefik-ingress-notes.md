@@ -26,8 +26,25 @@ ports:
     http3:
       enabled: true
       advertisedPort: 443
+
 service:
   single: false
+
+# Custom image that supports TLS curve X25519MLKEM768
+image:
+  repository: progfarkas/pqtraefik
+  tag: v3.0.1-2
+versionOverride: v3.0.1
+
+# Enable default namespace
+providers:
+  kubernetesCRD:
+    enabled: true
+    namespaces:
+      - ingress-traefik
+      - default
+
+# Allow bind to port 80 and 443
 securityContext:
   capabilities:
     drop: [ALL]
@@ -141,6 +158,24 @@ spec:
           class: traefik
 ```
 
+# Deploy TLS option
+
+```yaml
+# mlkemtls.yaml
+apiVersion: traefik.io/v1alpha1
+kind: TLSOption
+metadata:
+  namespace: default
+  name: mlkemtls
+spec:
+  sniStrict: false
+  minVersion: VersionTLS13
+  curvePreferences:
+    - X25519MLKEM768
+    - CurveP521
+    - CurveP384
+```
+
 # Deploy test app (HTTPS)
 
 ```yaml
@@ -152,6 +187,7 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls.options: default-mlkemtls@kubernetescrd
 spec:
   ingressClassName: traefik
   tls:
