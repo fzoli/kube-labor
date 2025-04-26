@@ -22,7 +22,12 @@ ports:
     port: 80
   websecure:
     port: 443
-
+    hostPort: 443
+    http3:
+      enabled: true
+      advertisedPort: 443
+service:
+  single: false
 securityContext:
   capabilities:
     drop: [ALL]
