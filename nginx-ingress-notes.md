@@ -3,12 +3,14 @@
 ```sh
 ./k8s-prepare.sh master
 kubectl taint nodes cka02-master-01 node-role.kubernetes.io/control-plane:NoSchedule-
+kubectl label nodes cka02-master-01 ingress-ready=yep
 ./k8s-prepare.sh net
 sudo snap install helm --classic
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
 helm install ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace \
-  --set controller.kind=DaemonSet --set controller.hostNetwork=true --set controller.dnsPolicy=ClusterFirstWithHostNet --set controller.service.type="" --set controller.hostPort.enabled=true --set controller.hostPort.http=80 --set controller.hostPort.https=443
+  --set controller.kind=DaemonSet --set controller.hostNetwork=true --set controller.dnsPolicy=ClusterFirstWithHostNet --set controller.service.type="" --set controller.hostPort.enabled=true --set controller.hostPort.http=80 --set controller.hostPort.https=443 \
+  --set controller.nodeSelector."ingress-ready"="yep"
 ```
 
 # Deploy test app (HTTP)
