@@ -6,38 +6,35 @@ kubectl taint nodes cka02-master-01 node-role.kubernetes.io/control-plane:NoSche
 kubectl label nodes cka02-master-01 ingress-ready=yep
 ./k8s-prepare.sh net
 sudo snap install helm --classic
-helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo add traefik https://traefik.github.io/charts
 helm repo update
 ```
 
 # Install ingress
 
-```sh
-helm install ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace \
-  --set controller.kind=DaemonSet --set controller.hostNetwork=true --set controller.dnsPolicy=ClusterFirstWithHostNet --set controller.service.type="" --set controller.hostPort.enabled=true --set controller.hostPort.http=80 --set controller.hostPort.https=443 \
-  --set controller.nodeSelector."ingress-ready"="yep"
-```
-
-or
+In order to bind to ports 80 and 443, `NET_BIND_SERVICE` is required. However, the Helm chart does not properly use this capability, so we are forced to run as root.
 
 ```yaml
-#ingress-values.yaml
-controller:
-  kind: DaemonSet
-  hostNetwork: true
-  dnsPolicy: ClusterFirstWithHostNet
-  service:
-    type: ""
-  hostPort:
-    enabled: true
-    http: 80
-    https: 443
-  nodeSelector:
-    ingress-ready: "yep"
+#traefik-values.yaml
+hostNetwork: true
+ports:
+  web:
+    port: 80
+  websecure:
+    port: 443
+
+securityContext:
+  capabilities:
+    drop: [ALL]
+    add: [NET_BIND_SERVICE]
+  readOnlyRootFilesystem: true
+  runAsGroup: 0
+  runAsNonRoot: false
+  runAsUser: 0
 ```
 
 ```sh
-helm install ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace -f ingress-values.yaml
+helm install traefik traefik/traefik --namespace ingress-traefik -f traefik-values.yaml
 ```
 
 # Deploy test app (HTTP)
@@ -92,20 +89,20 @@ kind: Ingress
 metadata:
   name: example-ingress
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik
   rules:
-  - host: test.example.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: example-service
-            port:
-              number: 80
+    - host: test.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: example-service
+                port:
+                  number: 80
 ```
 
 # Setup cert manager
@@ -136,7 +133,7 @@ spec:
     solvers:
     - http01:
         ingress:
-          class: nginx
+          class: traefik
 ```
 
 # Deploy test app (HTTPS)
@@ -149,24 +146,24 @@ metadata:
   name: example-ingress
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik
   tls:
-  - hosts:
-    - test.example.com
-    secretName: example-tls
+    - hosts:
+        - test.example.com
+      secretName: example-tls
   rules:
-  - host: test.example.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: example-service
-            port:
-              number: 80
+    - host: test.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: example-service
+                port:
+                  number: 80
 ```
 
-The example.com domain must be replaced both in the email addresses and in the hostnames.
+The `example.com` domain must be replaced both in the email addresses and in the hostnames.
