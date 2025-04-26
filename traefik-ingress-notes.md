@@ -3,6 +3,7 @@
 ```sh
 ./k8s-prepare.sh master
 kubectl taint nodes cka02-master-01 node-role.kubernetes.io/control-plane:NoSchedule-
+kubectl label nodes cka02-master-01 ingress-ready=true
 ./k8s-prepare.sh net
 sudo snap install helm --classic
 helm repo add traefik https://traefik.github.io/charts
@@ -15,7 +16,11 @@ In order to bind to ports 80 and 443, `NET_BIND_SERVICE` is required. However, t
 
 ```yaml
 #traefik-values.yaml
+nodeSelector:
+  ingress-ready: "true"
+
 hostNetwork: true
+
 ports:
   web:
     port: 80
