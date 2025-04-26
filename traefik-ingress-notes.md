@@ -3,7 +3,6 @@
 ```sh
 ./k8s-prepare.sh master
 kubectl taint nodes cka02-master-01 node-role.kubernetes.io/control-plane:NoSchedule-
-kubectl label nodes cka02-master-01 ingress-ready=yep
 ./k8s-prepare.sh net
 sudo snap install helm --classic
 helm repo add traefik https://traefik.github.io/charts
