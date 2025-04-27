@@ -69,7 +69,7 @@ securityContext:
 ```
 
 ```sh
-helm install traefik traefik/traefik \ 
+helm install traefik traefik/traefik \
   --namespace ingress-traefik --create-namespace \
   --version 35.1.0 \
   -f traefik-values.yaml
