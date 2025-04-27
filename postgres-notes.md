@@ -1,4 +1,6 @@
-# Non-ZFS local storage
+# Storage
+
+## Non-ZFS local storage
 
 ```sh
 kubectl create namespace local-path-storage
@@ -9,7 +11,7 @@ cd local-path-provisioner
 helm install local-path-storage ./deploy/chart/local-path-provisioner --namespace local-path-storage
 ```
 
-### ZFS local storage
+## ZFS local storage
 
 Local path storage is slow with ZFS.
 
