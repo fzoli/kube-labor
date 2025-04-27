@@ -46,7 +46,7 @@ kubectl logs my-postgres-postgresql-0
 ```
 
 ```sh
-kubectl run -i --tty debug --image=bitnami/postgresql --restart=Never -- bash
+kubectl run -i --tty debug --image=bitnami/postgresql --rm --restart=Never -- bash
 # in container:
 psql -h my-postgres-postgresql -U myuser -d mydatabase
 ```
