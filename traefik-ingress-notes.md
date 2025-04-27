@@ -34,6 +34,11 @@ ports:
 service:
   single: false
 
+# Enable dashboard without exposing it
+ingressRoute:
+  dashboard:
+    enabled: true
+
 # Custom image that supports TLS curve X25519MLKEM768
 image:
   repository: progfarkas/pqtraefik
@@ -74,6 +79,15 @@ helm install traefik traefik/traefik \
   --version 35.1.0 \
   -f traefik-values.yaml
 ```
+
+# Access Traefik dashboard
+
+```sh
+kubectl port-forward $(kubectl get pods --selector "app.kubernetes.io/name=traefik" --output=name -n ingress-traefik) 8085:8080 -n ingress-traefik
+```
+
+Open:
+http://127.0.0.1:8085/dashboard/
 
 # Deploy test app (base without HTTPS)
 
