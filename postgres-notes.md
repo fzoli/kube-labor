@@ -1,3 +1,5 @@
+# Non-ZFS local storage
+
 ```sh
 kubectl create namespace local-path-storage
 
@@ -7,12 +9,25 @@ cd local-path-provisioner
 helm install local-path-storage ./deploy/chart/local-path-provisioner --namespace local-path-storage
 ```
 
+### ZFS local storage
+
+Local path storage is slow with ZFS.
+
+```
+helm repo add openebs-zfs https://openebs.github.io/zfs-localpv
+helm repo update
+
+helm install openebs-zfs openebs-zfs/zfs-localpv --namespace openebs --create-namespace
+```
+
+# Install postgresql
+
 ```yaml
 #postgres-values.yaml
 primary:
   persistence:
     enabled: true
-    storageClass: "local-path"
+    storageClass: "local-path" # or zfs-local
     size: 2Gi
 
   nodeSelector:
@@ -40,6 +55,8 @@ helm repo update
 
 helm install my-postgres bitnami/postgresql -f postgres-values.yaml
 ```
+
+# Test
 
 ```sh
 kubectl logs my-postgres-postgresql-0
