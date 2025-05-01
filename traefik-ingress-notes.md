@@ -314,3 +314,23 @@ spec:
                 port:
                   number: 443
 ```
+
+# TLS passthrough
+
+```yaml
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: ipify-route-tcp
+  namespace: default
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: HostSNI(`ipify.example.com`)
+    services:
+    - name: ipify-proxy-service
+      port: 443
+  tls:
+    passthrough: true
+```
