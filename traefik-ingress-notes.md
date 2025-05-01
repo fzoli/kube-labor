@@ -317,6 +317,8 @@ spec:
 
 # TLS passthrough
 
+## External service
+
 ```yaml
 apiVersion: traefik.io/v1alpha1
 kind: IngressRouteTCP
@@ -333,4 +335,30 @@ spec:
       port: 443
   tls:
     passthrough: true
+```
+
+## Internal service
+
+```yaml
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: argocd-route-tcp
+  namespace: default
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: HostSNI(`argocd.example.com`)
+    services:
+    - name: argocd-server
+      port: 443
+  tls:
+    passthrough: true
+    certResolver: letsencrypt-prod
+    domains:
+      - main: "argocd.example.com"
+        sans:
+          - "*.example.com"
+    secretName: argocd-server-tls # used by pods
 ```
