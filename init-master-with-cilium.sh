@@ -2,7 +2,8 @@
 set -x
 set -euo pipefail
 
-export LE_EMAIL_ADDRESS="info@example.com" # TODO: replace it with your own address (Let's Encrypt rejects example.com)
+export LE_EMAIL_ADDRESS="info@example.com" # TODO: replace it with your own address (Let's Encrypt rejects example.com) then remove next line
+exit 1
 
 export GLOBAL_NETWORK=10.0.0.0/9
 export POD_NETWORK=10.1.0.0/16
