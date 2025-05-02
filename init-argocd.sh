@@ -64,6 +64,9 @@ wget https://github.com/argoproj/argo-cd/releases/download/v2.14.11/argocd-linux
 sudo mv argocd-linux-amd64 /usr/local/bin/argocd
 sudo chmod ugo+x /usr/local/bin/argocd
 
+# Wait Argo CD server be ready
+kubectl rollout status deployment/argocd-server -n argocd --timeout=120s
+
 # Wait initial secret
 until kubectl get secret argocd-initial-admin-secret -n argocd &>/dev/null; do
   sleep 1
