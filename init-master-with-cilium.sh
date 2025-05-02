@@ -5,6 +5,11 @@ set -euo pipefail
 export LE_EMAIL_ADDRESS="info@example.com" # TODO: replace it with your own address (Let's Encrypt rejects example.com) then remove next line
 exit 1
 
+# Wait cloud init
+while ps ax | grep python | grep -q cloud; do
+  sleep 1
+done
+
 export GLOBAL_NETWORK=10.0.0.0/9
 export POD_NETWORK=10.1.0.0/16
 export CLUSTER_ID=1
