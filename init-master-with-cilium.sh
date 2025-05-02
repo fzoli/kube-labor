@@ -110,13 +110,13 @@ image:
   tag: v3.0.1-2
 versionOverride: v3.0.1
 
-# Enable default namespace
+# Enable each namespace and external services
+rbac:
+  namespaced: false
 providers:
   kubernetesCRD:
     enabled: true
-    namespaces:
-      - ingress-traefik
-      - default
+    namespaces: []
   kubernetesIngress:
     allowExternalNameServices: true
 
