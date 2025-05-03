@@ -1,0 +1,12 @@
+apiVersion: traefik.io/v1alpha1
+kind: TLSOption
+metadata:
+  namespace: default
+  name: mlkemtls
+spec:
+  sniStrict: false
+  minVersion: VersionTLS13
+  curvePreferences:
+    - X25519MLKEM768
+    - CurveP521
+    - CurveP384

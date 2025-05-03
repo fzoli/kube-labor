@@ -1,0 +1,38 @@
+# Enable dashboard without exposing it
+ingressRoute:
+  dashboard:
+    enabled: true
+
+ports:
+  web: {}
+  websecure:
+    http3:
+      enabled: true
+      advertisedPort: 443
+
+# We need only one load balancer for TCP and UDP (HTTP/3)
+service:
+  single: true
+
+# Custom image that supports TLS curve X25519MLKEM768
+image:
+  repository: progfarkas/pqtraefik
+  tag: v3.0.1-2
+versionOverride: v3.0.1
+
+# Enable each namespace and external services
+rbac:
+  namespaced: false
+providers:
+  kubernetesCRD:
+    enabled: true
+    namespaces: []
+  kubernetesIngress:
+    allowExternalNameServices: true
+
+# Configure logger plugin
+experimental:
+  plugins:
+    traefiklogger:
+      moduleName: github.com/fzoli/traefiklogger
+      version: v0.10.0
