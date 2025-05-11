@@ -260,6 +260,23 @@ spec:
                   number: 80
 ```
 
+
+# Redirect to HTTPS
+
+Use it like `traefik.ingress.kubernetes.io/router.middlewares: default-redirect-to-https@kubernetescrd` in the HTTP middleware.
+
+```yaml
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  namespace: default
+  name: redirect-to-https
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+```
+
 # Proxy
 
 ```yaml
