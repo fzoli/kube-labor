@@ -19,6 +19,8 @@ ports:
 # We need only one load balancer for TCP and UDP (HTTP/3)
 service:
   single: true
+  annotations:
+    service.beta.kubernetes.io/do-loadbalancer-enable-proxy-protocol: "true"
 
 # Custom image that supports TLS curve X25519MLKEM768
 image:
