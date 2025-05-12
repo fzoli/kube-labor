@@ -4,11 +4,17 @@ ingressRoute:
     enabled: true
 
 ports:
-  web: {}
+  web:
+    proxyProtocol:
+      trustedIPs:
+        - "0.0.0.0/0"
   websecure:
     http3:
       enabled: true
       advertisedPort: 443
+    proxyProtocol:
+      trustedIPs:
+        - "0.0.0.0/0"
 
 # We need only one load balancer for TCP and UDP (HTTP/3)
 service:

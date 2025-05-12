@@ -7,6 +7,8 @@ kubectl apply -f traefik-mlkemtls.yaml
 kubectl apply -f traefik-redirect.yaml
 ```
 
+In case of helm upgrade, run `kubectl rollout restart deployment traefik -n ingress-traefik`.
+
 ```sh
 helm install cert-manager jetstack/cert-manager \
   --namespace cert-manager --create-namespace \
