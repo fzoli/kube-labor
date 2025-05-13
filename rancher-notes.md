@@ -7,3 +7,9 @@ helm install rancher rancher-latest/rancher \
   --set ingress.tls.source=letsEncrypt \
   --set letsEncrypt.email=info@example.com
 ```
+
+Reset password:
+
+```
+kubectl -n cattle-system exec -it $(kubectl -n cattle-system get pods -l app=rancher -o jsonpath="{.items[0].metadata.name}") -- reset-password
+```
