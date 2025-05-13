@@ -2,8 +2,8 @@ NOTE: 2 GB RAM is not enough!
 
 ```sh
 sudo apt-get install -y zfsutils-linux
-sudo truncate -s 10G /zfs-disk.img
-sudo zpool create zfspv-pool $(sudo losetup -f /zfs-disk.img --show)
+sudo truncate -s 10G /zfs-disk.img  # for testing
+sudo zpool create zfspv-pool /zfs-disk.img # for testing
 sudo apt-get install -y uuid
 kubectl label node $(hostname) openebs.io/nodeid=$(uuid)
 helm repo add openebs https://openebs.github.io/openebs
