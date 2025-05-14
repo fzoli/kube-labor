@@ -10,7 +10,7 @@ MASTER_RAM=6G
 
 ## Install nvme-tcp kernel module
 
-Optional.
+Optional. Only for Replicated Storage (mayastor).
 
 ```sh
 sudo apt-get install -y linux-modules-extra-$(uname -r)
@@ -30,10 +30,11 @@ sudo apt-get install -y uuid
 kubectl label node $(hostname) openebs.io/nodeid=$(uuid)
 helm repo add openebs https://openebs.github.io/openebs
 helm repo update
-helm install openebs --namespace openebs openebs/openebs --create-namespace
+helm install openebs --namespace openebs openebs/openebs --create-namespace \
+  --set engines.replicated.mayastor.enabled=false
 ```
 
-Scale down to 1 node:
+### Scale down to 1 node if mayastor is enabled (for testing):
 
 ```sh
 kubectl scale statefulset openebs-etcd --replicas=1 -n openebs
@@ -43,12 +44,7 @@ kubectl set env statefulset/openebs-etcd -n openebs --containers=etcd \
 kubectl delete pod -l app.kubernetes.io/name=etcd -n openebs
 ```
 
-```sh
-# Only if nvme-tcp kernel module is not installed
-kubectl delete daemonset openebs-csi-node -n openebs
-```
-
-## Wait to be ready
+### Wait mayastor to be ready
 
 ```sh
 kubectl rollout status statefulset.apps/openebs-etcd -n openebs --timeout=3m
