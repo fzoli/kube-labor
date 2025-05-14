@@ -74,7 +74,7 @@ kind: Pod
 metadata:
   name: fio
 spec:
-  restartPolicy: Never
+  restartPolicy: OnFailure
   containers:
   - name: perfrunner
     image: openebs/tests-fio
