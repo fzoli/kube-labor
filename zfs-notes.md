@@ -11,6 +11,25 @@ helm repo update
 helm install openebs --namespace openebs openebs/openebs --create-namespace
 ```
 
+Scale down to 1 node:
+
+```sh
+kubectl scale statefulset openebs-etcd --replicas=1 -n openebs
+kubectl get statefulset openebs-etcd -n openebs -o yaml > openebs-etcd-sts.yaml
+# edit openebs-etcd-sts.yaml then apply:
+#         - name: ETCD_INITIAL_CLUSTER_STATE
+#           value: new
+#         - name: ETCD_INITIAL_CLUSTER
+#           value: openebs-etcd-0=http://openebs-etcd-0.openebs-etcd-headless.openebs.svc.cluster.local:2380
+kubectl delete pod -l app.kubernetes.io/name=etcd -n openebs
+```
+
+If no `nvme_tcp` kernel module available:
+
+```sh
+kubectl delete daemonset openebs-csi-node -n openebs
+```
+
 ```yaml
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
