@@ -15,12 +15,9 @@ Scale down to 1 node:
 
 ```sh
 kubectl scale statefulset openebs-etcd --replicas=1 -n openebs
-kubectl get statefulset openebs-etcd -n openebs -o yaml > openebs-etcd-sts.yaml
-# edit openebs-etcd-sts.yaml then apply:
-#         - name: ETCD_INITIAL_CLUSTER_STATE
-#           value: new
-#         - name: ETCD_INITIAL_CLUSTER
-#           value: openebs-etcd-0=http://openebs-etcd-0.openebs-etcd-headless.openebs.svc.cluster.local:2380
+kubectl set env statefulset/openebs-etcd -n openebs --containers=etcd \
+  ETCD_INITIAL_CLUSTER="$(kubectl get statefulset openebs-etcd -n openebs -o jsonpath='{.spec.template.spec.containers[?(@.name=="etcd")].env[?(@.name=="ETCD_INITIAL_CLUSTER")].value}' | cut -d, -f1)" \
+  ETCD_INITIAL_CLUSTER_STATE=new
 kubectl delete pod -l app.kubernetes.io/name=etcd -n openebs
 ```
 
