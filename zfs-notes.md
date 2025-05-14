@@ -89,3 +89,12 @@ spec:
     persistentVolumeClaim:
       claimName: csi-zfspv
 ```
+
+Minimal write test:
+
+```sh
+kubectl exec -it fio -- /bin/bash
+cd /datadir
+echo "hello openebs" > testfile.txt
+cat testfile.txt
+```
