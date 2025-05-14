@@ -48,6 +48,13 @@ kubectl delete pod -l app.kubernetes.io/name=etcd -n openebs
 kubectl delete daemonset openebs-csi-node -n openebs
 ```
 
+## Wait to be ready
+
+```sh
+kubectl rollout status statefulset.apps/openebs-etcd -n openebs --timeout=3m
+kubectl rollout status daemonset/openebs-csi-node -n openebs --timeout=3m # if not deleted
+```
+
 ## Usage
 
 ```yaml
