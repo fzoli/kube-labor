@@ -1,4 +1,26 @@
+## Prepare
+
 NOTE: 2 GB RAM is not enough!
+
+Recommended values for labor.sh:
+```
+MASTER_CPU=4
+MASTER_RAM=6G
+```
+
+## Install nvme-tcp kernel module
+
+Optional.
+
+```sh
+sudo apt-get install -y linux-modules-extra-$(uname -r)
+sudo tee /etc/modules-load.d/openebs.conf <<EOF
+nvme-tcp
+EOF
+sudo modprobe nvme-tcp
+```
+
+## Install ZFS, create test zpool and install openebs 
 
 ```sh
 sudo apt-get install -y zfsutils-linux
@@ -21,11 +43,12 @@ kubectl set env statefulset/openebs-etcd -n openebs --containers=etcd \
 kubectl delete pod -l app.kubernetes.io/name=etcd -n openebs
 ```
 
-If no `nvme_tcp` kernel module available:
-
 ```sh
+# Only if nvme-tcp kernel module is not installed
 kubectl delete daemonset openebs-csi-node -n openebs
 ```
+
+## Usage
 
 ```yaml
 apiVersion: storage.k8s.io/v1
@@ -60,10 +83,14 @@ spec:
       storage: 4Gi
 ```
 
+## Check
+
 ```sh
 kubectl get zv -n openebs
 zfs list
 ```
+
+## Test pod with PVC
 
 ```yaml
 apiVersion: v1
@@ -87,7 +114,7 @@ spec:
       claimName: csi-zfspv
 ```
 
-Minimal write test:
+### Minimal write test:
 
 ```sh
 kubectl exec -it fio -- /bin/bash

@@ -18,8 +18,8 @@ DOMAIN=${5:-"cka02.devopsakademia.com"}
 
 # Multipass settings
 DIST="noble" # Ubuntu 24.04 or "jammy" for Ubuntu 22.04
-MASTER_CPU=1
-MASTER_RAM=2G
+MASTER_CPU=4
+MASTER_RAM=6G
 MASTER_DISK=20G
 WORKER_CPU=1
 WORKER_RAM=2G
