@@ -127,6 +127,8 @@ providers:
 
 # Configure Kubernetes gateway
 gateway:
+#  annotations: # has no effect so websecure listener is disabled
+#    cert-manager.io/issuer: letsencrypt-gw-prod
   listeners:
     web:
       port: 80
