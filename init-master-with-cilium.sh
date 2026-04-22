@@ -83,7 +83,7 @@ kubectl label nodes "$NODE_NAME" ingress-ready=true
 
 helm install traefik traefik/traefik \
   --namespace ingress-traefik --create-namespace \
-  --version 35.1.0 \
+  --version 39.0.8 \
   -f - <<EOF
 
 nodeSelector:
@@ -109,12 +109,6 @@ ingressRoute:
   dashboard:
     enabled: true
 
-# Custom image that supports TLS curve X25519MLKEM768
-image:
-  repository: progfarkas/pqtraefik
-  tag: v3.0.1-2
-versionOverride: v3.0.1
-
 # Enable each namespace and external services
 rbac:
   namespaced: false
@@ -122,8 +116,23 @@ providers:
   kubernetesCRD:
     enabled: true
     namespaces: []
+    nativeLBByDefault: false
   kubernetesIngress:
     allowExternalNameServices: true
+    nativeLBByDefault: false
+  kubernetesGateway:
+    enabled: true
+    experimentalChannel: false
+    nativeLBByDefault: false
+
+# Configure Kubernetes gateway
+gateway:
+  listeners:
+    web:
+      port: 80
+      protocol: HTTP
+      namespacePolicy:
+        from: All
 
 # Configure logger plugin
 experimental:
