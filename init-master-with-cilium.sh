@@ -133,14 +133,14 @@ gateway:
       protocol: HTTP
       namespacePolicy:
         from: All
-    websecure:
-      port: 443
-      protocol: HTTPS
-      namespacePolicy:
-        from: All
-      certificateRefs:
-        - name: traefik-default-tls
-          namespace: ingress-traefik
+#    websecure: # this section can be used if you have one or more (static) wildcard certificate
+#      port: 443
+#      protocol: HTTPS
+#      namespacePolicy:
+#        from: All
+#      certificateRefs:
+#        - name: traefik-default-tls
+#          namespace: ingress-traefik
 
 # Configure logger plugin
 experimental:
