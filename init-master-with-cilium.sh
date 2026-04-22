@@ -133,6 +133,14 @@ gateway:
       protocol: HTTP
       namespacePolicy:
         from: All
+    websecure:
+      port: 443
+      protocol: HTTPS
+      namespacePolicy:
+        from: All
+      certificateRefs:
+        - name: traefik-default-tls
+          namespace: ingress-traefik
 
 # Configure logger plugin
 experimental:
@@ -157,8 +165,9 @@ helm repo add jetstack https://charts.jetstack.io
 helm repo update
 helm install cert-manager jetstack/cert-manager \
   --namespace cert-manager --create-namespace \
-  --version v1.12.0 \
-  --set installCRDs=true
+  --version v1.20.2 \
+  --set crds.enabled=true \
+  --set "extraArgs={--enable-gateway-api}"
 
 kubectl apply -f - <<EOF
 apiVersion: cert-manager.io/v1
@@ -175,6 +184,26 @@ spec:
     - http01:
         ingress:
           class: traefik
+EOF
+
+kubectl apply -f - <<EOF
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-gw-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: $LE_EMAIL_ADDRESS
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - http01:
+        gatewayHTTPRoute:
+          parentRefs:
+            - name: traefik-gateway
+              namespace: ingress-traefik
+              kind: Gateway
 EOF
 
 kubectl apply -f - <<EOF
