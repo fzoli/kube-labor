@@ -161,6 +161,24 @@ securityContext:
   runAsNonRoot: false
   runAsUser: 0
 
+# Docker engine support - begin
+deployment:
+  additionalVolumes:
+    - name: docker-sock
+      hostPath:
+        path: /var/run/docker.sock
+        type: Socket
+
+additionalVolumeMounts:
+  - name: docker-sock
+    mountPath: /var/run/docker.sock
+
+additionalArguments:
+  - "--providers.docker=true"
+  - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+  - "--providers.docker.exposedbydefault=false"
+# Docker engine support - end
+
 EOF
 
 helm repo add jetstack https://charts.jetstack.io
