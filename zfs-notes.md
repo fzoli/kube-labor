@@ -125,3 +125,25 @@ cd /datadir
 echo "hello openebs" > testfile.txt
 cat testfile.txt
 ```
+
+# containerd
+
+Use ZFS instead of overlayfs:
+
+```toml
+[plugins."io.containerd.grpc.v1.cri".containerd]
+    snapshotter = "zfs"
+```
+
+ZFS path:
+`/var/lib/containerd/io.containerd.snapshotter.v1.zfs`
+
+Create the ZFS dataset **before** executing `kubeadm init`.
+
+For example:
+```
+zfs create -o mountpoint=/var/lib/containerd/io.containerd.snapshotter.v1.zfs tank/containerd
+```
+where `tank` is the name of the ZFS pool.
+
+Note that `/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs` will not be used, but `/var/lib/kubelet/pods/<pod-uid>/volumes` will work as usual.
