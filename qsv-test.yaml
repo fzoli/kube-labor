@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: qsv-test
+spec:
+  restartPolicy: Never
+  containers:
+  - name: ffmpeg
+    image: ubuntu:22.04
+    command:
+    - /bin/bash
+    - -c
+    - |
+      apt-get update -qq && apt-get install -y -qq curl gnupg 2>/dev/null
+      curl -fsSL https://repo.jellyfin.org/ubuntu/jellyfin_team.gpg.key | gpg --dearmor -o /etc/apt/trusted.gpg.d/jellyfin.gpg
+      echo "deb [arch=amd64] https://repo.jellyfin.org/ubuntu jammy main" > /etc/apt/sources.list.d/jellyfin.list
+      apt-get update -qq && apt-get install -y -qq jellyfin-ffmpeg6 intel-media-va-driver-non-free 2>/dev/null
+      FF=/usr/lib/jellyfin-ffmpeg/ffmpeg
+
+      echo "=== Step 1: RTSP -> file ==="
+      $FF -rtsp_transport tcp \
+        -i "rtsps://some-h265-stream.example.com" \
+        -c:v copy -t 5 /tmp/input.mkv -y 2>&1
+      ls -lh /tmp/input.mkv
+
+      echo "=== Step 2: file -> QSV decode -> JPEG ==="
+      $FF \
+        -init_hw_device qsv=qsv:/dev/dri/renderD128 \
+        -hwaccel qsv -hwaccel_output_format qsv \
+        -c:v hevc_qsv \
+        -i /tmp/input.mkv \
+        -vf "hwdownload,format=nv12,fps=1" \
+        -c:v mjpeg -q:v 5 -frames:v 3 \
+        /tmp/frame_%02d.jpg -y 2>&1
+
+      ls -lh /tmp/frame_*.jpg 2>/dev/null && echo "SUCCESS" || echo "FAILED"
+    resources:
+      limits:
+        gpu.intel.com/i915: "1"
